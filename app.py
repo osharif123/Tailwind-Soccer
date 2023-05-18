@@ -63,16 +63,22 @@ def login():
         try:
             conn = mysql.connect()
             cursor = conn.cursor()
-            cursor.execute('SELECT * FROM users WHERE email = %s AND password = %s', (email, password,))
+            cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
             data = cursor.fetchone()
 
             if data is None:
-                flash('Invalid email or password', 'danger')
+                flash('User does not exist', 'danger')
                 return render_template('login.html', form=form)
             else:
-                user = User(data[0])  # assuming id is at index 0
-                login_user(user)
-                return redirect(url_for('home'))
+                stored_password = data[1]  # assuming password is at index 1
+                if password == stored_password:
+                    user = User(data[0])  # assuming id is at index 0
+                    login_user(user)
+                    return redirect(url_for('home'))
+                else:
+                    flash('Invalid password', 'danger')
+                    return render_template('index.html', form=form)
+
         except Exception as e:
             print(e)
             flash('An error occurred during login. Please try again.', 'danger')
@@ -82,7 +88,8 @@ def login():
             if conn:
                 conn.close()
     
-    return render_template('login.html', form=form)
+    return render_template('index.html', form=form)
+
 
 
 if __name__ == "__main__":
