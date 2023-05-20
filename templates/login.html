@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8">
+    <title> Responsive Login Form </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"/>
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body>
+    <div class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">
+        {{ message }}
+      </div>
+      {% endfor %}
+      {% endif %}
+      {% endwith %}
+      <form action="{{ url_for('login') }}" method="POST">
+        {{ form.hidden_tag() }}
+        <div class="title">Login</div>
+        <div class="input-box underline">
+            {{ form.email(placeholder="Enter Your Email") }}
+            <div class="underline"></div>
+        </div>
+        <div class="input-box">
+            {{ form.password(placeholder="Enter Your Password") }}
+            <div class="underline"></div>
+        </div>
+        <div class="input-box button">
+          <input type="submit" name="" value="Continue">
+        </div>
+      </form>
+        <div class="option">Don't have an account?</div>
+        <div class="twitter">
+          <a href="{{ url_for('register') }}"><i class="fab fa"></i>Luuqa soo gal</a>
+        </div>
+    </div>
+  </body>
+</html>

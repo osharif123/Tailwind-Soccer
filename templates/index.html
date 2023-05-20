@@ -192,7 +192,16 @@
                 </button>
                 <div class="px-6 py-6 lg:px-8">
                     <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Sign in to our platform</h3>
-                    <form class="space-y-6" action="/login" method="POST```html enctype="multipart/form-data">>
+                    <form class="space-y-6" action="/login" method="POST">
+                        {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                        <div class="flash-messages">
+                        {% for message in messages %}
+                          <div>{{ message }}</div>
+                        {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% endwith %}
                         <div>
                             <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your email</label>
                             <input type="email" name="email" id="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="name@company.com" required>
@@ -230,7 +239,16 @@
             </button>
             <div class="px-6 py-6 lg:px-8">
                 <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Create your account</h3>
-                <form class="space-y-6" action="#">
+                <form class="space-y-6" action="/register" method="post">
+                    {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                    <div class="flash-messages">
+                    {% for message in messages %}
+                      <div>{{ message }}</div>
+                    {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% endwith %}
                     <div>
                         <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your email</label>
                         <input type="email" name="email" id="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="email" required>
@@ -240,20 +258,24 @@
                         <input type="password" name="password" id="password" placeholder="Passwordkaadi maxa waaye" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" required>
                     </div>
                     <div>
-                        <label for="Repeat password because of xaasidnima" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your password AGAIN</label>
-                        <input type="Repeat password because of xaasidnima" name="password" id="password" placeholder="Repeat password because of xaasidnima" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" required>
+                        <label for="password_confirmation" class="block mb-2 text```html
+                    <div>
+                        <label for="password_confirmation" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your password AGAIN</label>
+                        <input type="password" name="password_confirmation" id="password_confirmation" placeholder="Repeat password because of xaasidnima" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" required>
                     </div>
                     <div>
-                        <label for="Admin Key" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Admin Key</label>
-                        <input type="Admin Key" name="Admin Key" id="password" placeholder="Enter Admin Key if you're Syria" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white">
+                        <label for="admin_key" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Admin Key</label>
+                        <input type="password" name="admin_key" id="admin_key" placeholder="Enter Admin Key if you're Syria" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white">
                     </div>
+                    <br>
+                    <button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Create your account</button>
                 </form>
-                <br>
-                <button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Create your account</button>
+                
             </div>
         </div>
     </div>
 </div>
+
 <!-- Event Creation modal -->
 <div id="Create-event-modal" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
     <div class="relative w-full max-w-md max-h-full">
