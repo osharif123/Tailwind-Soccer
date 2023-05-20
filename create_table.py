@@ -7,21 +7,56 @@ config = {
     'db': 'u390839445_Sharif_users'
 }
 
-def test_mysqldb_connection(config):
-    conn = None
-    try:
-        print('Connecting to MySQL database...')
-        conn = MySQLdb.connect(**config)
+# Connect to the database
+db = MySQLdb.connect(**config)
+cursor = db.cursor()
 
-        if conn:
-            print('Connection to MySQL database successful')
-        else:
-            print('Connection to MySQL database failed')
-    except MySQLdb.OperationalError as e:
-        print('Error occurred:', e)
-    finally:
-        if conn:
-            conn.close()
-            print('MySQL connection closed')
+# Create temporary table
+create_query = """
+CREATE TABLE events_temp (
+    id TEXT,
+    time TEXT,
+    location TEXT,
+    day TEXT
+)
+"""
+try:
+    cursor.execute(create_query)
+    db.commit()
+    print("Temporary table created successfully.")
+except MySQLdb.Error as e:
+    db.rollback()
+    print("Error creating temporary table:", e)
 
-test_mysqldb_connection(config)
+# Copy data from original table to temporary table
+copy_query = "INSERT INTO events_temp SELECT id, time, location, day FROM events"
+try:
+    cursor.execute(copy_query)
+    db.commit()
+    print("Data copied to temporary table successfully.")
+except MySQLdb.Error as e:
+    db.rollback()
+    print("Error copying data to temporary table:", e)
+
+# Drop the original table
+drop_query = "DROP TABLE events"
+try:
+    cursor.execute(drop_query)
+    db.commit()
+    print("Original table dropped successfully.")
+except MySQLdb.Error as e:
+    db.rollback()
+    print("Error dropping original table:", e)
+
+# Rename temporary table to original table name
+rename_query = "ALTER TABLE events_temp RENAME TO events"
+try:
+    cursor.execute(rename_query)
+    db.commit()
+    print("Temporary table renamed to 'events'.")
+except MySQLdb.Error as e:
+    db.rollback()
+    print("Error renaming temporary table:", e)
+
+# Close the database connection
+db.close()

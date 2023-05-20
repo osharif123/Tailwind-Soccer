@@ -1,16 +1,20 @@
 import logging
 import traceback
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_mysqldb import MySQL, cursors
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
 from wtforms.validators import DataRequired, Email
 from flask_login import UserMixin, LoginManager, login_user, login_required, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
+import MySQLdb
 from MySQLdb import OperationalError
+from datetime import timedelta
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key_here'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -57,6 +61,7 @@ def login():
             if user and check_password_hash(user['password'], password):
                 user_object = User(user['id'], user['email'], user['password'], user['is_admin'])
                 login_user(user_object)
+                session.permanent = True
                 return redirect(url_for('index'))
             else:
                 flash('Login Unsuccessful. Please check your email and password', 'danger')
@@ -92,6 +97,25 @@ def register():
             flash('An error occurred while registering. Please try again later.', 'danger')
     return render_template('register.html', title='Register', form=form)
 
+@app.route('/create_event', methods=['POST'])
+@login_required
+def create_event():
+    location = request.form.get('location')
+    day = request.form.get('day')
+    time = request.form.get('time')
+    
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM events WHERE location = %s AND day = %s AND time = %s", (location, day, time))
+    event = cur.fetchone()
+
+    if event:
+        flash('Event with the same location, date and time already exists', 'danger')
+    else:
+        cur.execute("INSERT INTO events (location, day, time) VALUES (%s, %s, %s)", (location, day, time))
+        mysql.connection.commit()
+        flash('You have successfully created the event!', 'success')
+
+    return redirect(url_for('index'))
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -123,5 +147,5 @@ def handle_db_error(err):
     return redirect(url_for('login'))
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)
 
