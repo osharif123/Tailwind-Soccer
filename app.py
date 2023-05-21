@@ -1,6 +1,7 @@
 import logging
 import traceback
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+
 from flask_mysqldb import MySQL, cursors
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
@@ -9,7 +10,7 @@ from flask_login import UserMixin, LoginManager, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 import MySQLdb
 from MySQLdb import OperationalError
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 
 app = Flask(__name__)
@@ -61,6 +62,7 @@ def login():
             if user and check_password_hash(user['password'], password):
                 user_object = User(user['id'], user['email'], user['password'], user['is_admin'])
                 login_user(user_object)
+                session['user_id'] = user['id']  # Store the user's ID in the session
                 session.permanent = True
                 return redirect(url_for('index'))
             else:
@@ -97,9 +99,23 @@ def register():
             flash('An error occurred while registering. Please try again later.', 'danger')
     return render_template('register.html', title='Register', form=form)
 
+def get_current_user():
+    try:
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)  
+        cur.execute("SELECT * FROM users WHERE id = %s", [session['user_id']])
+        user = cur.fetchone()
+        return user
+    except Exception as e:
+        logging.error(traceback.format_exc())
+        flash('An error occurred while getting the current user. Please try again later.', 'danger')
+
 @app.route('/create_event', methods=['POST'])
 @login_required
 def create_event():
+    user = get_current_user()
+    if not user['is_admin']:
+        flash('Sorry, are you Syria or are you trying to act like him', 'danger')
+
     location = request.form.get('location')
     day = request.form.get('day')
     time = request.form.get('time')
@@ -116,6 +132,56 @@ def create_event():
         flash('You have successfully created the event!', 'success')
 
     return redirect(url_for('index'))
+
+
+@app.route('/latest_event', methods=['GET'])
+def latest_event():
+    try:
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cur.execute("SELECT id, location, day, TIME_FORMAT(time, '%H:%i') as time FROM events ORDER BY id DESC LIMIT 1")
+        latest_event = cur.fetchone()
+
+        if not latest_event:
+            return jsonify({'error': 'No events found.'}), 404
+
+        cur.execute("SELECT COUNT(*) as count FROM rsvps WHERE event_id = %s", [latest_event['id']])
+        rsvp_count = cur.fetchone()['count']
+
+        # format date in Python
+        latest_event['day'] = latest_event['day'].strftime('%Y-%m-%d')
+
+        return jsonify({'latest_event': latest_event, 'rsvp_count': rsvp_count})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+
+
+
+@app.route('/rsvp', methods=['POST'])
+@login_required
+def rsvp():
+    event_id = request.form.get('event_id')
+    try:
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cur.execute("SELECT COUNT(*) as count FROM rsvps WHERE event_id = %s", [event_id])
+        rsvp_count = cur.fetchone()['count']
+
+        if rsvp_count >= 12:
+            flash('Too late. We already have 12 people. Please do not show up.', 'danger')
+            return redirect(url_for('index'))
+
+        cur.execute("INSERT INTO rsvps (first_name, timestamp, event_id) VALUES (%s, NOW(), %s)", (session['user_id'], event_id))
+        mysql.connection.commit()
+        flash('Thanks, you\'re in!', 'success')
+        return redirect(url_for('index'))
+
+    except Exception as e:
+        logging.error(traceback.format_exc())
+        flash('An error occurred while registering. Please try again later.', 'danger')
+        return redirect(url_for('index'))
+
 
 @login_manager.user_loader
 def load_user(user_id):
