@@ -7,56 +7,46 @@ config = {
     'db': 'u390839445_Sharif_users'
 }
 
-# Connect to the database
-db = MySQLdb.connect(**config)
-cursor = db.cursor()
+def retrieve_table_columns(config):
+    conn = None
+    try:
+        print('Connecting to MySQL database...')
+        conn = MySQLdb.connect(**config)
+        if conn:
+            print('Connection to MySQL database successful')
 
-# Create temporary table
-create_query = """
-CREATE TABLE events_temp (
-    id TEXT,
-    time TEXT,
-    location TEXT,
-    day TEXT
-)
-"""
-try:
-    cursor.execute(create_query)
-    db.commit()
-    print("Temporary table created successfully.")
-except MySQLdb.Error as e:
-    db.rollback()
-    print("Error creating temporary table:", e)
+            cursor = conn.cursor()
 
-# Copy data from original table to temporary table
-copy_query = "INSERT INTO events_temp SELECT id, time, location, day FROM events"
-try:
-    cursor.execute(copy_query)
-    db.commit()
-    print("Data copied to temporary table successfully.")
-except MySQLdb.Error as e:
-    db.rollback()
-    print("Error copying data to temporary table:", e)
+            # Retrieve table names
+            cursor.execute("SHOW TABLES")
+            tables = cursor.fetchall()
 
-# Drop the original table
-drop_query = "DROP TABLE events"
-try:
-    cursor.execute(drop_query)
-    db.commit()
-    print("Original table dropped successfully.")
-except MySQLdb.Error as e:
-    db.rollback()
-    print("Error dropping original table:", e)
+            # Iterate over tables
+            for table in tables:
+                table_name = table[0]
+                print(f"Table: {table_name}")
+                print("Columns:")
 
-# Rename temporary table to original table name
-rename_query = "ALTER TABLE events_temp RENAME TO events"
-try:
-    cursor.execute(rename_query)
-    db.commit()
-    print("Temporary table renamed to 'events'.")
-except MySQLdb.Error as e:
-    db.rollback()
-    print("Error renaming temporary table:", e)
+                # Retrieve column names for each table
+                cursor.execute(f"SHOW COLUMNS FROM {table_name}")
+                columns = cursor.fetchall()
 
-# Close the database connection
-db.close()
+                # Print column names
+                for column in columns:
+                    column_name = column[0]
+                    print(column_name)
+
+                print()  # Print a blank line between tables
+
+            cursor.close()
+        else:
+            print('Connection to MySQL database failed')
+
+    except MySQLdb.OperationalError as e:
+        print('Error occurred:', e)
+    finally:
+        if conn:
+            conn.close()
+            print('MySQL connection closed')
+
+retrieve_table_columns(config)
